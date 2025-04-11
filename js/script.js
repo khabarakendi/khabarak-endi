@@ -1,53 +1,69 @@
-const FAST_FEEDS = [
-  "https://almasdaronline.com/feed",
-  "https://yemennownews.com/feed"
-];
-
-async function fetchNews() {
-  const newsContainer = document.getElementById('news-container');
-  
-  try {
-    // Try CORS-anywhere proxy
-    const feed = FAST_FEEDS[0];
-    const proxyUrl = `https://cors-anywhere.herokuapp.com/${feed}`;
-    const response = await fetch(proxyUrl);
-    const text = await response.text();
-    
-    // Parse RSS manually (simple version)
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, "text/xml");
-    const items = xml.querySelectorAll("item");
-    
-    const news = Array.from(items).map(item => ({
-      title: item.querySelector("title").textContent,
-      link: item.querySelector("link").textContent,
-      pubDate: item.querySelector("pubDate").textContent
-    }));
-    
-    renderNews(news.slice(0, 150));
-  } catch (error) {
-    console.error("Error:", error);
-    // Fallback to hardcoded news
-    renderNews([{
-      title: "اقرأ آخر الأخبار على المصدر مباشرة",
-      link: "https://almasdaronline.com",
-      pubDate: new Date().toISOString()
-    }]);
-  }
+// Load news from JSON
+async function loadNews() {
+    try {
+        // Add cache-buster to prevent stale content
+        const response = await fetch(`data/news.json?t=${new Date().getTime()}`);
+        if (!response.ok) throw new Error("Failed to load news");
+        
+        const data = await response.json();
+        renderNews(data.articles);
+    } catch (error) {
+        console.error("Error:", error);
+        document.getElementById('news-container').innerHTML = `
+            <div class="error">
+                <p>News will update shortly. Last checked: ${new Date().toLocaleString()}</p>
+            </div>
+        `;
+    }
 }
 
-function renderNews(items) {
-  const container = document.getElementById('news-container');
-  container.innerHTML = items.map(item => `
-    <div class="news-item" onclick="window.open('${item.link}', '_blank')">
-      <h3>${item.title}</h3>
-      <div class="meta">
-        <span class="source">${new URL(item.link).hostname}</span>
-        <span class="time">${new Date(item.pubDate).toLocaleString('en-US')}</span>
-      </div>
-    </div>
-  `).join('');
+// Render news to DOM
+function renderNews(articles) {
+    const container = document.getElementById('news-container');
+    container.innerHTML = articles.map(article => `
+        <div class="news-item" onclick="viewArticle('${encodeURIComponent(article.url)}')">
+            <h3>${article.title}</h3>
+            <div class="meta">
+                <span class="source">${article.source}</span>
+                <span class="time">${formatDate(article.date)}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Format date in English
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// View article in embedded mode
+function viewArticle(url) {
+    localStorage.setItem('currentArticle', url);
+    window.location.href = 'article.html';
+}
+
+// Update time every minute
+function updateDateTime() {
+    document.getElementById('datetime').textContent = 
+        new Date().toLocaleString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
 }
 
 // Initialize
-document.addEventListener('DOMContentLoaded', fetchNews);
+document.addEventListener('DOMContentLoaded', () => {
+    loadNews();
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+    setInterval(loadNews, 300000); // Refresh news every 5 mins
+});
