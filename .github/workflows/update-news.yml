@@ -1,76 +1,31 @@
+# .github/workflows/update-news.yml (correct version)
 name: Update Yemeni News
 on:
   schedule:
     - cron: '*/5 * * * *'  # Runs every 5 minutes
-  workflow_dispatch:
+  workflow_dispatch:       # Allows manual triggers
 
 jobs:
   update-news:
     runs-on: ubuntu-latest
-    permissions:  # 👈 THIS FIXES THE 403 ERROR
-      contents: write  # Allows pushing changes
-    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}  # 👈 CRUCIAL FOR PUSHING
-
-      - name: Set up Python 3.10
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
+      
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install feedparser beautifulsoup4 requests
-
-      - name: Scrape Yemeni news
-        run: |
-          mkdir -p data scripts
-          python -c "
-          import feedparser
-          import json
-          from datetime import datetime
-          from bs4 import BeautifulSoup
-          import requests
-
-          FEEDS = [
-              'https://www.almashhad-alyemeni.com/feed',
-              'https://yemennownews.com/feed',
-              'https://www.24-post.com/feed'
-          ]
-
-          articles = []
-          for feed_url in FEEDS:
-              try:
-                  headers = {'User-Agent': 'Mozilla/5.0'}
-                  response = requests.get(feed_url, headers=headers, timeout=10)
-                  feed = feedparser.parse(response.content)
-                  for entry in feed.entries[:30]:
-                      articles.append({
-                          'title': BeautifulSoup(entry.title, 'html.parser').get_text(),
-                          'url': entry.link,
-                          'source': feed_url.split('//')[1].split('/')[0],
-                          'date': datetime.utcnow().isoformat() + 'Z'
-                      })
-              except Exception as e:
-                  print(f'Error with {feed_url}: {str(e)}')
-
-          with open('data/news.json', 'w', encoding='utf-8') as f:
-              json.dump({
-                  'lastUpdated': datetime.utcnow().isoformat() + 'Z',
-                  'articles': articles[:150]
-              }, f, ensure_ascii=False, indent=2)
-          "
-
-      - name: Commit and push changes
+        run: pip install feedparser beautifulsoup4 requests
+      
+      - name: Scrape news
+        run: python scripts/scrape_news.py
+      
+      - name: Commit changes
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git pull
           git add data/news.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update news [skip ci]"
+          git commit -m "Auto-update news [skip ci]"
           git push
