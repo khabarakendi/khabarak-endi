@@ -3,19 +3,16 @@ let animationId;
 
 async function startTicker() {
     try {
-        // Clear previous animation if any
         if (animationId) {
             cancelAnimationFrame(animationId);
         }
 
-        // Show loading message
         updateTickerContent('جاري تحميل العناوين...');
 
-        // Load news data with timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch('data/news.json', { 
+
+        const response = await fetch('data/news.json', {
             signal: controller.signal,
             cache: 'no-cache'
         });
@@ -27,69 +24,69 @@ async function startTicker() {
 
         const data = await response.json();
 
-        // Process news items
         tickerItems = processNewsItems(data.articles);
-        
-        if (tickerItems.length === 0) {
+
+        if (!tickerItems.length) {
             updateTickerContent('لا توجد أخبار عاجلة حالياً');
             return;
         }
 
-        // Start scrolling animation
         startScrollingAnimation();
-        
+
     } catch (error) {
         console.error('Ticker loading error:', error);
-        updateTickerContent('خطأ في تحميل الأخبار - جاري المحاولة مرة أخرى');
-        // Retry after 5 seconds
+        updateTickerContent('خطأ في تحميل الأخبار - إعادة المحاولة خلال لحظات...');
         setTimeout(startTicker, 5000);
     }
 }
 
 function processNewsItems(articles) {
-    return articles.slice(0, 10).map(item => {
-        try {
-            const date = new Date(item.date);
-            const timeString = date.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-            return `${item.title} (${timeString})`;
-        } catch (e) {
-            console.error('Error processing news item:', e);
-            return item.title; // Fallback to just title if date parsing fails
-        }
-    }).filter(Boolean);
+    return articles
+        .slice(0, 10)
+        .map(item => {
+            try {
+                const date = new Date(item.date);
+                const timeString = date.toLocaleTimeString('ar-EG', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                return `${item.title} (${timeString})`;
+            } catch (e) {
+                console.warn('Date parsing failed for:', item.title);
+                return item.title;
+            }
+        })
+        .filter(Boolean);
 }
 
 function startScrollingAnimation() {
     const tickerElement = document.getElementById('breaking-news-ticker');
     if (!tickerElement) return;
 
+    tickerElement.innerHTML = '';
+
     const contentElement = document.createElement('div');
     contentElement.className = 'ticker-scroll-content';
-    
-    // Duplicate content for seamless looping
+
     const contentText = tickerItems.join(' ••• ');
-    contentElement.textContent = contentText + ' ••• ' + contentText;
-    
-    tickerElement.innerHTML = '';
+    contentElement.textContent = `${contentText} ••• ${contentText}`;
+
     tickerElement.appendChild(contentElement);
 
     let position = 0;
     const contentWidth = contentElement.scrollWidth / 2;
-    const speed = 50; // pixels per second
+    const speed = 50;
 
     const animate = () => {
-        position -= speed / 60; // Adjust for 60fps
+        position -= speed / 60;
         if (position <= -contentWidth) {
             position = 0;
         }
         contentElement.style.transform = `translateX(${position}px)`;
         animationId = requestAnimationFrame(animate);
     };
-    
+
     animationId = requestAnimationFrame(animate);
 }
 
@@ -100,5 +97,4 @@ function updateTickerContent(message) {
     }
 }
 
-// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', startTicker);
