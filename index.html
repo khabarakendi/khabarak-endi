@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>خبرك عندي - Yemen News</title>
     <style>
-        /* Critical CSS (loaded first) */
         body {
             margin: 0;
             padding: 0;
@@ -40,6 +39,29 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Bottom Ticker Styles */
+        .bottom-ticker {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #c62828;
+            color: #fff;
+            font-size: 1rem;
+            padding: 10px 0;
+            overflow: hidden;
+            z-index: 999;
+        }
+        .bottom-ticker .ticker-text {
+            display: inline-block;
+            white-space: nowrap;
+            padding-right: 100%;
+            animation: scroll-left 20s linear infinite;
+        }
+        @keyframes scroll-left {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
     </style>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -59,9 +81,9 @@
             
             <!-- Breaking News Ticker -->
             <div class="breaking-news">
-                 <span class="ticker-label">أخبار عاجلة:</span>
+                <span class="ticker-label">أخبار عاجلة:</span>
                 <div class="ticker-content" id="breaking-news-ticker">
-                     <span>جاري تحميل العناوين...</span>
+                    <span>جاري تحميل العناوين...</span>
                 </div>
             </div>
         </div>
@@ -111,42 +133,17 @@
         </div>
     </footer>
 
+    <!-- Bottom Breaking News Ticker -->
+    <div class="bottom-ticker">
+        <div class="ticker-text" id="bottom-ticker-text">جاري تحميل الأخبار العاجلة...</div>
+    </div>
+
     <!-- JavaScript -->
     <script src="js/utils.js"></script>
     <script src="js/news-loader.js"></script>
     <script src="js/ticker.js"></script>
-    
-    <!-- Initialize Page -->
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set initial datetime
-            updateDateTime();
-            
-            // Load news immediately
-            if (typeof loadNews === 'function') {
-                loadNews();
-            } else {
-                console.error('loadNews function not found');
-            }
-            
-            // Start breaking news ticker
-            if (typeof startTicker === 'function') {
-                startTicker();
-            } else {
-                console.error('startTicker function not found');
-            }
-            
-            // Update time every minute
-            setInterval(updateDateTime, 60000);
-            
-            // Refresh news every 5 minutes
-            setInterval(() => {
-                if (typeof loadNews === 'function') {
-                    loadNews();
-                }
-            }, 300000);
-        });
-        
         function updateDateTime() {
             const now = new Date();
             const options = {
@@ -161,63 +158,48 @@
             document.getElementById('current-datetime').innerHTML = 
                 `<i class="icon-clock"></i> ${now.toLocaleDateString('ar-EG', options)}`;
         }
-    </script>
-    <!-- JavaScript -->
-<script src="js/utils.js"></script>
-<script src="js/news-loader.js"></script>
-<script src="js/ticker.js"></script>
 
-<!-- Initialize Page -->
-<script>
-    // Keep your existing updateDateTime function
-    function updateDateTime() {
-        const now = new Date();
-        const options = {
-            weekday: 'short',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        };
-        document.getElementById('current-datetime').innerHTML = 
-            `<i class="icon-clock"></i> ${now.toLocaleDateString('ar-EG', options)}`;
-    }
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            if (typeof loadNews === 'function') {
+                loadNews();
+            }
+            startTickerWithRetry();
+            setInterval(updateDateTime, 60000);
+        });
 
-    // Add the new initialization code
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set initial datetime
-        updateDateTime();
-        
-        // Load news immediately
-        if (typeof loadNews === 'function') {
-            loadNews();
-        }
-        
-        // Start breaking news ticker with retry mechanism
-        startTickerWithRetry();
-        
-        // Update time every minute
-        setInterval(updateDateTime, 60000);
-    });
-
-    function startTickerWithRetry(retryCount = 0) {
-        if (typeof startTicker === 'function') {
-            startTicker().catch(error => {
-                console.error('Ticker failed:', error);
-                if (retryCount < 3) {
-                    setTimeout(() => startTickerWithRetry(retryCount + 1), 5000);
+        function startTickerWithRetry(retryCount = 0) {
+            if (typeof startTicker === 'function') {
+                startTicker().catch(error => {
+                    console.error('Ticker failed:', error);
+                    if (retryCount < 3) {
+                        setTimeout(() => startTickerWithRetry(retryCount + 1), 5000);
+                    }
+                });
+            } else {
+                console.error('startTicker function not found');
+                if (retryCount < 5) {
+                    setTimeout(() => startTickerWithRetry(retryCount + 1), 1000);
                 }
-            });
-        } else {
-            console.error('startTicker function not found');
-            // Try again after 1 second if the script might not be loaded yet
-            if (retryCount < 5) {
-                setTimeout(() => startTickerWithRetry(retryCount + 1), 1000);
             }
         }
-    }
-</script>
+
+        // Fetch latest 3 news titles for bottom ticker
+        async function loadBottomTicker() {
+            try {
+                const response = await fetch('news.json'); // adjust path if needed
+                const data = await response.json();
+                const latestTitles = data.slice(0, 3).map(item => item.title).join(" ⚫ ");
+                document.getElementById('bottom-ticker-text').textContent = latestTitles;
+            } catch (error) {
+                console.error('Failed to load bottom ticker:', error);
+                document.getElementById('bottom-ticker-text').textContent = "فشل تحميل الأخبار العاجلة";
+            }
+        }
+
+        // Load on page start and update every 5 minutes
+        loadBottomTicker();
+        setInterval(loadBottomTicker, 300000);
+    </script>
 </body>
 </html>
