@@ -27,6 +27,19 @@
             text-align: center;
             color: #d00;
         }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -110,16 +123,28 @@
             updateDateTime();
             
             // Load news immediately
-            loadNews();
+            if (typeof loadNews === 'function') {
+                loadNews();
+            } else {
+                console.error('loadNews function not found');
+            }
             
             // Start breaking news ticker
-            startTicker();
+            if (typeof startTicker === 'function') {
+                startTicker();
+            } else {
+                console.error('startTicker function not found');
+            }
             
             // Update time every minute
             setInterval(updateDateTime, 60000);
             
             // Refresh news every 5 minutes
-            setInterval(loadNews, 300000);
+            setInterval(() => {
+                if (typeof loadNews === 'function') {
+                    loadNews();
+                }
+            }, 300000);
         });
         
         function updateDateTime() {
@@ -134,7 +159,7 @@
                 hour12: true
             };
             document.getElementById('current-datetime').innerHTML = 
-                `<i class="icon-clock"></i> ${now.toLocaleDateString('en-US', options)}`;
+                `<i class="icon-clock"></i> ${now.toLocaleDateString('ar-EG', options)}`;
         }
     </script>
 </body>
