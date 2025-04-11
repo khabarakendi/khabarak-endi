@@ -1,15 +1,16 @@
-// Sample breaking news for ticker
-const breakingNews = [
-    "🚨 الحكومة اليمنية تعلن عن إصلاحات جديدة في قطاع الطاقة",
-    "🚨 ارتفاع أسعار النفط عالمياً يؤثر على الاقتصاد اليمني",
-    "🚨 وفد حوثي يصل إلى مسقط للمشاركة في محادثات السلام"
-];
-
-function updateTicker() {
-    const ticker = document.getElementById('ticker-content');
-    ticker.textContent = breakingNews.join(' | ');
+async function updateTicker() {
+    try {
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_FEEDS[0])}`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        const headlines = data.items.slice(0, 3).map(item => item.title);
+        document.getElementById('ticker-content').textContent = headlines.join(' | ');
+    } catch (error) {
+        console.error("Ticker error:", error);
+    }
 }
 
-// Update ticker every 10 seconds
+// Update every 2 minutes
 updateTicker();
-setInterval(updateTicker, 10000);
+setInterval(updateTicker, 120000);
