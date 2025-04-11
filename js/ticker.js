@@ -1,95 +1,104 @@
 let tickerItems = [];
-let currentTickerIndex = 0;
-let tickerInterval;
-const TICKER_SPEED = 5000; // 5 seconds per item
+let animationId;
 
 async function startTicker() {
     try {
-        // Clear any existing interval
-        if (tickerInterval) clearInterval(tickerInterval);
-        
-        // Load news data
-        const response = await fetch('data/news.json');
-        if (!response.ok) throw new Error('Failed to load news data');
-        
-        const data = await response.json();
-        
-        // Process news items for ticker (latest 10 headlines)
-        tickerItems = data.articles
-            .slice(0, 10)
-            .map(item => item.title)
-            .filter(title => title && title.trim().length > 0);
-        
-        // If we have items, start the ticker
-        if (tickerItems.length > 0) {
-            updateTicker();
-            tickerInterval = setInterval(updateTicker, TICKER_SPEED);
-            return Promise.resolve(); // Indicate success
-        } else {
-            showTickerError('No breaking news available');
-            return Promise.reject('No news items available');
+        // Clear previous animation if any
+        if (animationId) {
+            cancelAnimationFrame(animationId);
         }
+
+        // Show loading message
+        updateTickerContent('جاري تحميل العناوين...');
+
+        // Load news data with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch('data/news.json', { 
+            signal: controller.signal,
+            cache: 'no-cache'
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Process news items
+        tickerItems = processNewsItems(data.articles);
+        
+        if (tickerItems.length === 0) {
+            updateTickerContent('لا توجد أخبار عاجلة حالياً');
+            return;
+        }
+
+        // Start scrolling animation
+        startScrollingAnimation();
+        
     } catch (error) {
-        console.error('Ticker error:', error);
-        showTickerError('Failed to load breaking news');
-        return Promise.reject(error);
+        console.error('Ticker loading error:', error);
+        updateTickerContent('خطأ في تحميل الأخبار - جاري المحاولة مرة أخرى');
+        // Retry after 5 seconds
+        setTimeout(startTicker, 5000);
     }
 }
 
-function updateTicker() {
+function processNewsItems(articles) {
+    return articles.slice(0, 10).map(item => {
+        try {
+            const date = new Date(item.date);
+            const timeString = date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            return `${item.title} (${timeString})`;
+        } catch (e) {
+            console.error('Error processing news item:', e);
+            return item.title; // Fallback to just title if date parsing fails
+        }
+    }).filter(Boolean);
+}
+
+function startScrollingAnimation() {
     const tickerElement = document.getElementById('breaking-news-ticker');
     if (!tickerElement) return;
+
+    const contentElement = document.createElement('div');
+    contentElement.className = 'ticker-scroll-content';
     
-    // Fade out current content
-    tickerElement.style.opacity = 0;
+    // Duplicate content for seamless looping
+    const contentText = tickerItems.join(' ••• ');
+    contentElement.textContent = contentText + ' ••• ' + contentText;
     
-    setTimeout(() => {
-        // Update content
-        tickerElement.textContent = tickerItems[currentTickerIndex];
-        // Fade in new content
-        tickerElement.style.opacity = 1;
-        
-        // Move to next item
-        currentTickerIndex = (currentTickerIndex + 1) % tickerItems.length;
-    }, 300); // Match this with CSS transition time
+    tickerElement.innerHTML = '';
+    tickerElement.appendChild(contentElement);
+
+    let position = 0;
+    const contentWidth = contentElement.scrollWidth / 2;
+    const speed = 50; // pixels per second
+
+    const animate = () => {
+        position -= speed / 60; // Adjust for 60fps
+        if (position <= -contentWidth) {
+            position = 0;
+        }
+        contentElement.style.transform = `translateX(${position}px)`;
+        animationId = requestAnimationFrame(animate);
+    };
+    
+    animationId = requestAnimationFrame(animate);
 }
 
-function showTickerError(message) {
+function updateTickerContent(message) {
     const tickerElement = document.getElementById('breaking-news-ticker');
     if (tickerElement) {
-        tickerElement.innerHTML = `<span class="ticker-error">${message}</span>`;
+        tickerElement.innerHTML = `<div class="ticker-message">${message}</div>`;
     }
 }
-async function startTicker() {
-    try {
-        if (animationId) cancelAnimationFrame(animationId);
-        
-        const response = await fetch('data/news.json');
-        if (!response.ok) throw new Error('Failed to load news data');
-        
-        const data = await response.json();
-        
-        tickerItems = data.articles
-            .slice(0, 10)
-            .map(item => {
-                const date = new Date(item.date);
-                const timeString = date.toLocaleTimeString('en-US', {
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: true
-                });
-                return `${item.title} (${timeString})`;
-            })
-            .filter(item => item && item.trim().length > 0);
-        
-        if (tickerItems.length > 0) {
-            setupScrollingTicker();
-            startScrolling();
-        } else {
-            showTickerError('لا توجد أخبار عاجلة');
-        }
-    } catch (error) {
-        console.error('Ticker error:', error);
-        showTickerError('خطأ في تحميل الأخبار العاجلة');
-    }
-}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', startTicker);
