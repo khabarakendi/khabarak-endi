@@ -1,34 +1,39 @@
+// Sample breaking news data (fallback if API fails)
+const sampleBreakingNews = [
+    {title: "البنك المركزي يعلن إجراءات جديدة لتحسين الاقتصاد", source: "المصدر أونلاين"},
+    {title: "اجتماع هام بين الحكومة والمجلس الانتقالي في عدن", source: "يمن الآن"},
+    {title: "ارتفاع أسعار النفط عالمياً يؤثر على السوق المحلي", source: "الاقتصادي اليمني"}
+];
+
 function updateBreakingNews() {
     fetch('data/news.json?t=' + Date.now())
-        .then(response => {
-            if (!response.ok) throw new Error("Network error");
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            if (data.articles && data.articles.length > 0) {
-                const breakingNews = data.articles.slice(0, 3)
-                    .map(item => `🚨 ${item.title}`)
-                    .join(' • ');
-                
-                const ticker = document.getElementById('breaking-news-ticker');
-                if (ticker) {
-                    ticker.innerHTML = breakingNews;
-                    // Restart animation
-                    ticker.style.animation = 'none';
-                    void ticker.offsetWidth; // Trigger reflow
-                    ticker.style.animation = 'ticker 30s linear infinite';
-                }
-            } else {
-                throw new Error("No articles found");
-            }
+            const news = data.articles && data.articles.length > 0 ? 
+                data.articles.slice(0, 3) : 
+                sampleBreakingNews;
+            
+            const tickerItems = news.map(item => 
+                `🚨 ${item.title} (${item.source}) • `
+            ).join('');
+            
+            const ticker = document.getElementById('breaking-news-ticker');
+            ticker.innerHTML = tickerItems;
+            
+            // Restart animation
+            ticker.style.animation = 'none';
+            void ticker.offsetWidth;
+            ticker.style.animation = 'ticker 30s linear infinite';
         })
         .catch(error => {
-            console.error("Breaking news error:", error);
-            document.getElementById('breaking-news-ticker').innerHTML = 
-                '🚨 تحديث الأخبار العاجلة قريبًا • ';
+            console.error("Error loading breaking news:", error);
+            const tickerItems = sampleBreakingNews.map(item => 
+                `🚨 ${item.title} (${item.source}) • `
+            ).join('');
+            document.getElementById('breaking-news-ticker').innerHTML = tickerItems;
         });
 }
 
-// Initialize immediately
+// Initialize and update every 5 minutes
 updateBreakingNews();
-setInterval(updateBreakingNews, 300000); // Update every 5 minutes
+setInterval(updateBreakingNews, 300000);
