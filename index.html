@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>خبرك عندي - Yemen News</title>
     <style>
-        /* Critical CSS */
+        /* Critical CSS (loaded first) */
         body {
             margin: 0;
             padding: 0 70px; /* Space for special news button */
@@ -28,6 +28,15 @@
             text-align: center;
             color: #d00;
         }
+        .error button {
+            background: #d00;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -37,7 +46,7 @@
         أخبار خاصة
     </a>
 
-    <!-- Header -->
+    <!-- Header Section -->
     <header id="site-header">
         <div class="header-top">
             <div class="logo-container">
@@ -82,7 +91,7 @@
         </div>
     </footer>
 
-    <!-- Breaking News Bar (Now Working) -->
+    <!-- Breaking News Bar -->
     <div class="breaking-news-bar">
         <div class="ticker-wrapper">
             <div class="breaking-news-label">أخبار عاجلة:</div>
@@ -109,7 +118,7 @@
             // Load news immediately
             if (typeof loadNews === 'function') loadNews();
             
-            // Start breaking news ticker (force update)
+            // Start breaking news ticker
             if (typeof updateBreakingNews === 'function') {
                 updateBreakingNews();
                 setInterval(updateBreakingNews, 300000); // Update every 5 mins
