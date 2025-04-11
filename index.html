@@ -1,81 +1,39 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خبرك عندي - Khabarak Endi</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
-            padding: 20px;
-            direction: rtl;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .news-item {
-            background-color: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-        .news-item h3 {
-            margin: 0 0 10px 0;
-            color: #007BFF;
-        }
-        .news-item p {
-            margin: 0 0 8px 0;
-        }
-        .news-item a {
-            color: #0069d9;
-            text-decoration: none;
-        }
-        .news-item a:hover {
-            text-decoration: underline;
-        }
-        .news-meta {
-            font-size: 0.85em;
-            color: #777;
-        }
-    </style>
+    <title>خبرك عندي</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>📰 خبرك عندي - Khabarak Endi</h1>
-    <div id="news-container">جارٍ تحميل الأخبار...</div>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <span class="red">خبرك</span>
+            <span class="green">عندي</span>
+        </div>
+        <div class="ticker" id="ticker">
+            <span id="ticker-content">🚨 تحميل آخر الأخبار...</span>
+        </div>
+    </header>
 
-    <script>
-        async function loadNews() {
-            try {
-                const response = await fetch('news.json?t=' + new Date().getTime());
-                const newsData = await response.json();
+    <!-- Navigation -->
+    <nav>
+        <a href="#" class="active">الرئيسية</a>
+        <a href="#local">محلية</a>
+        <a href="#international">دولية</a>
+        <a href="#sports">رياضة</a>
+        <a href="#economic">اقتصادية</a>
+        <a href="private.html">خاصة</a>
+    </nav>
 
-                const container = document.getElementById('news-container');
-                container.innerHTML = '';
+    <!-- News Container -->
+    <div class="news-container" id="news-container">
+        <!-- Filled by JavaScript -->
+    </div>
 
-                newsData.forEach(item => {
-                    const div = document.createElement('div');
-                    div.classList.add('news-item');
-                    div.innerHTML = `
-                        <h3><a href="${item.link}" target="_blank">${item.title}</a></h3>
-                        <p class="news-meta">🕒 ${item.time} | 🗂️ ${item.category} | 📡 ${item.source}</p>
-                    `;
-                    container.appendChild(div);
-                });
-            } catch (err) {
-                console.error('فشل تحميل الأخبار:', err);
-                document.getElementById('news-container').innerText = 'حدث خطأ أثناء تحميل الأخبار.';
-            }
-        }
-
-        // Load on page load
-        loadNews();
-
-        // Auto-refresh every 5 minutes
-        setInterval(loadNews, 5 * 60 * 1000);
-    </script>
+    <script src="js/ticker.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
