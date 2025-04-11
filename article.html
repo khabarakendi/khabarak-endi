@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>Article Viewer | Khabarak Endi</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Keep main header visible -->
+    <header>
+        <div class="logo-container">
+            <div class="logo">
+                <span class="red">خبرك</span>
+                <span class="green">عندي</span>
+            </div>
+            <button onclick="window.history.back()" class="back-button">← Back to Home</button>
+        </div>
+    </header>
+
+    <!-- Embedded Article -->
+    <div class="article-viewer">
+        <iframe id="article-iframe" src="" frameborder="0"></iframe>
+    </div>
+
+    <script src="js/article.js"></script>
+</body>
+</html>
