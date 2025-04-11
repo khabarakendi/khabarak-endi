@@ -1,25 +1,26 @@
-// Format English date/time
-function updateDateTime() {
-    const now = new Date();
-    const options = {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
+// Utility functions can be added here
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
     };
-    document.getElementById('datetime').textContent = 
-        now.toLocaleDateString('en-US', options);
 }
 
-// Simple error handler
-function showError(message) {
-    const container = document.getElementById('news-container');
-    container.innerHTML = `
-        <div class="error">
-            <p>${message}</p>
-            <button onclick="loadNews()">Retry</button>
-        </div>
-    `;
-}
+// Add event listeners for search and filter
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('news-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            // Implement search functionality
+        }, 300));
+    }
+
+    const sortSelect = document.getElementById('news-sort');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            // Implement sorting functionality
+        });
+    }
+});
