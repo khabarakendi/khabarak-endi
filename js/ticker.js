@@ -1,47 +1,34 @@
-// Initialize the ticker when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    updateBreakingNews(); // Run immediately
-    setInterval(updateBreakingNews, 300000); // Update every 5 minutes
-});
-
-// Main function to update breaking news ticker
 function updateBreakingNews() {
-    fetch('data/news.json?t=' + Date.now()) // Cache buster
+    fetch('data/news.json?t=' + Date.now())
         .then(response => {
-            if (!response.ok) throw new Error("Network response was not ok");
+            if (!response.ok) throw new Error("Network error");
             return response.json();
         })
         .then(data => {
             if (data.articles && data.articles.length > 0) {
-                const latestNews = data.articles.slice(0, 3); // Get 3 latest
-                const tickerContent = latestNews.map(news => 
-                    `🚨 ${news.title} • `
-                ).join('');
+                const breakingNews = data.articles.slice(0, 3)
+                    .map(item => `🚨 ${item.title}`)
+                    .join(' • ');
                 
-                // Update the bottom breaking news bar
-                document.getElementById('breaking-news-ticker').innerHTML = tickerContent;
+                const ticker = document.getElementById('breaking-news-ticker');
+                if (ticker) {
+                    ticker.innerHTML = breakingNews;
+                    // Restart animation
+                    ticker.style.animation = 'none';
+                    void ticker.offsetWidth; // Trigger reflow
+                    ticker.style.animation = 'ticker 30s linear infinite';
+                }
             } else {
-                showTickerError();
+                throw new Error("No articles found");
             }
         })
         .catch(error => {
-            console.error('Error loading breaking news:', error);
-            showTickerError();
+            console.error("Breaking news error:", error);
+            document.getElementById('breaking-news-ticker').innerHTML = 
+                '🚨 تحديث الأخبار العاجلة قريبًا • ';
         });
 }
 
-// Show error/default message in ticker
-function showTickerError() {
-    document.getElementById('breaking-news-ticker').innerHTML = 
-        '🚨 تحديث الأخبار العاجلة قريبًا • ';
-}
-
-// Backward compatibility (can be removed later)
-function startTicker() {
-    updateBreakingNews();
-}
-
-// Backward compatibility (can be removed later)
-async function updateTicker() {
-    await updateBreakingNews();
-}
+// Initialize immediately
+updateBreakingNews();
+setInterval(updateBreakingNews, 300000); // Update every 5 minutes
