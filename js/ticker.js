@@ -1,28 +1,16 @@
-// Red RTL ticker (left-to-right in Arabic)
-const ticker = document.getElementById('ticker-content');
-let tickerPos = 0;
-
-function updateTicker() {
-    fetch('https://api.rss2json.com/v1/api.json?rss_url=https://almasdaronline.com/feed')
-        .then(res => res.json())
-        .then(data => {
-            const headlines = data.items.slice(0, 3).map(item => item.title);
-            ticker.textContent = headlines.join(' • ');
-            animateTicker();
-        });
-}
-
-function animateTicker() {
-    tickerPos -= 1;
-    ticker.style.transform = `translateX(${tickerPos}px)`;
-    
-    if (-tickerPos > ticker.offsetWidth) {
-        tickerPos = window.innerWidth;
+// Fetch breaking news
+async function updateTicker() {
+    try {
+        const response = await fetch(`data/news.json?t=${new Date().getTime()}`);
+        const data = await response.json();
+        const breakingNews = data.articles.slice(0, 3).map(item => item.title);
+        document.getElementById('ticker-content').textContent = 
+            breakingNews.map(news => `🚨 ${news}`).join(' | ');
+    } catch (error) {
+        console.error("Ticker error:", error);
     }
-    
-    requestAnimationFrame(animateTicker);
 }
 
-// Start
+// Initialize
 updateTicker();
-setInterval(updateTicker, 300000); // Update every 5 minutes
+setInterval(updateTicker, 300000); // Update every 5 mins
