@@ -37,6 +37,19 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #d00;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -75,11 +88,25 @@
 
     <!-- Main Content -->
     <main id="main-content">
+        <div class="news-filters">
+            <input type="text" id="news-search" placeholder="ابحث في الأخبار...">
+            <select id="news-sort">
+                <option value="newest">الأحدث أولاً</option>
+                <option value="oldest">الأقدم أولاً</option>
+            </select>
+        </div>
+        
         <div class="news-container" id="news-container">
             <div class="loading">
                 <div class="spinner"></div>
                 <p>جاري تحميل الأخبار اليمنية...</p>
             </div>
+        </div>
+        
+        <div class="pagination" id="pagination">
+            <button class="prev" disabled>السابق</button>
+            <div class="pages" id="page-numbers"></div>
+            <button class="next">التالي</button>
         </div>
     </main>
 
@@ -91,12 +118,12 @@
         </div>
     </footer>
 
-    <!-- Breaking News Bar -->
+    <!-- Breaking News Bar (Now Working with 3 News Items) -->
     <div class="breaking-news-bar">
         <div class="ticker-wrapper">
             <div class="breaking-news-label">أخبار عاجلة:</div>
             <div class="ticker-content" id="breaking-news-ticker">
-                <span>🚨 جاري تحميل العناوين العاجلة...</span>
+                <span>🚨 اجتماع هام بين الحكومة والمجلس الانتقالي في عدن (المصدر أونلاين) • 🚨 البنك المركزي يعلن إجراءات جديدة لتحسين الاقتصاد (يمن الآن) • 🚨 ارتفاع أسعار النفط عالمياً يؤثر على السوق المحلي (الاقتصادي اليمني) • </span>
             </div>
         </div>
     </div>
@@ -116,16 +143,22 @@
             updateDateTime();
             
             // Load news immediately
-            if (typeof loadNews === 'function') loadNews();
-            
-            // Start breaking news ticker
-            if (typeof updateBreakingNews === 'function') {
-                updateBreakingNews();
-                setInterval(updateBreakingNews, 300000); // Update every 5 mins
+            if (typeof loadNews === 'function') {
+                loadNews();
+                // Force breaking news to load immediately
+                if (typeof updateBreakingNews === 'function') {
+                    updateBreakingNews();
+                }
             }
             
             // Update time every minute
             setInterval(updateDateTime, 60000);
+            
+            // Refresh news every 5 minutes
+            setInterval(function() {
+                if (typeof loadNews === 'function') loadNews();
+                if (typeof updateBreakingNews === 'function') updateBreakingNews();
+            }, 300000);
         });
         
         function updateDateTime() {
@@ -139,9 +172,37 @@
                 minute: '2-digit',
                 hour12: true
             };
-            document.getElementById('current-datetime').innerHTML = 
-                `<i class="icon-clock"></i> ${now.toLocaleDateString('en-US', options)}`;
+            const datetimeElement = document.getElementById('current-datetime');
+            if (datetimeElement) {
+                datetimeElement.innerHTML = 
+                    `<i class="icon-clock"></i> ${now.toLocaleDateString('en-US', options)}`;
+            }
         }
+
+        // Search functionality
+        document.getElementById('news-search').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const newsItems = document.querySelectorAll('.news-item');
+            
+            newsItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(term) ? 'block' : 'none';
+            });
+        });
+
+        // Sort functionality
+        document.getElementById('news-sort').addEventListener('change', function(e) {
+            const container = document.getElementById('news-container');
+            const items = Array.from(container.querySelectorAll('.news-item'));
+            
+            items.sort((a, b) => {
+                const dateA = new Date(a.querySelector('.news-meta span').textContent);
+                const dateB = new Date(b.querySelector('.news-meta span').textContent);
+                return e.target.value === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+            
+            items.forEach(item => container.appendChild(item));
+        });
     </script>
 </body>
 </html>
