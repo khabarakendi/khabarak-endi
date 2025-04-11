@@ -1,11 +1,23 @@
 {
-  "lastUpdated": "2023-11-15",
+  "lastUpdated": "2023-11-15T14:25:00Z",
   "articles": [
     {
       "title": "العملة اليمنية تواجه ضغوطاً جديدة",
       "url": "https://almasdaronline.com/article/123",
       "source": "المصدر أونلاين",
       "date": "2023-11-15T10:30:00Z"
+    },
+    {
+      "title": "اجتماع حكومي لبحث الأزمة الاقتصادية",
+      "url": "https://yemennow.com/article/456",
+      "source": "اليمن الآن",
+      "date": "2023-11-15T12:45:00Z"
+    },
+    {
+      "title": "تقرير: تحسن في أسعار السلع الأساسية",
+      "url": "https://24ye.com/article/789",
+      "source": "24 Yemen",
+      "date": "2023-11-15T09:15:00Z"
     }
   ]
 }
