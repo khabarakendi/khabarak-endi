@@ -13,6 +13,7 @@
             background: #f5f5f5;
             color: #333;
             direction: rtl;
+            padding-bottom: 50px;
         }
         .loading {
             text-align: center;
@@ -26,6 +27,15 @@
             border-radius: 5px;
             text-align: center;
             color: #d00;
+        }
+        .error button {
+            background: #d00;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
     <link rel="stylesheet" href="css/style.css">
@@ -41,14 +51,6 @@
                 </div>
                 <div class="datetime" id="current-datetime">
                     <i class="icon-clock"></i> Loading...
-                </div>
-            </div>
-            
-            <!-- Breaking News Ticker -->
-            <div class="breaking-news">
-                <span class="ticker-label">أخبار عاجلة:</span>
-                <div class="ticker-content" id="breaking-news-ticker">
-                    <span>جاري تحميل العناوين...</span>
                 </div>
             </div>
         </div>
@@ -68,58 +70,54 @@
 
     <!-- Main Content -->
     <main id="main-content">
-        <div class="news-filters">
-            <input type="text" id="news-search" placeholder="ابحث في الأخبار...">
-            <select id="news-sort">
-                <option value="newest">الأحدث أولاً</option>
-                <option value="oldest">الأقدم أولاً</option>
-            </select>
-        </div>
-        
         <div class="news-container" id="news-container">
             <div class="loading">
                 <div class="spinner"></div>
                 <p>جاري تحميل الأخبار اليمنية...</p>
             </div>
         </div>
-        
-        <div class="pagination" id="pagination">
-            <button class="prev" disabled>السابق</button>
-            <div class="pages" id="page-numbers"></div>
-            <button class="next">التالي</button>
-        </div>
     </main>
 
     <!-- Footer -->
     <footer id="site-footer">
         <div class="footer-content">
-            <p>جميع الحقوق محفوظة © 2023 موقع خبرك عندي</p>
+            <p>جميع الحقوق محفوظة © <span id="current-year"></span> موقع خبرك عندي</p>
             <p>آخر تحديث: <span id="last-updated">جاري التحميل...</span></p>
         </div>
     </footer>
+
+    <!-- Breaking News Bar -->
+    <div class="breaking-news-bar">
+        <div class="ticker-wrapper">
+            <div class="breaking-news-label">أخبار عاجلة:</div>
+            <div class="ticker-content" id="breaking-news-ticker">
+                <span>جاري تحميل الأخبار العاجلة...</span>
+            </div>
+        </div>
+    </div>
 
     <!-- JavaScript -->
     <script src="js/utils.js"></script>
     <script src="js/news-loader.js"></script>
     <script src="js/ticker.js"></script>
     
-    <!-- Initialize Page -->
     <script>
+        // Initialize Page
         document.addEventListener('DOMContentLoaded', function() {
+            // Set current year
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+            
             // Set initial datetime
             updateDateTime();
             
             // Load news immediately
-            loadNews();
+            if (typeof loadNews === 'function') loadNews();
             
             // Start breaking news ticker
-            startTicker();
+            if (typeof startTicker === 'function') startTicker();
             
             // Update time every minute
             setInterval(updateDateTime, 60000);
-            
-            // Refresh news every 5 minutes
-            setInterval(loadNews, 300000);
         });
         
         function updateDateTime() {
@@ -133,17 +131,12 @@
                 minute: '2-digit',
                 hour12: true
             };
-            document.getElementById('current-datetime').innerHTML = 
-                `<i class="icon-clock"></i> ${now.toLocaleDateString('en-US', options)}`;
+            const datetimeElement = document.getElementById('current-datetime');
+            if (datetimeElement) {
+                datetimeElement.innerHTML = 
+                    `<i class="icon-clock"></i> ${now.toLocaleDateString('en-US', options)}`;
+            }
         }
     </script>
-    <div class="breaking-news-bar">
-    <div class="ticker-wrapper">
-        <div class="breaking-news-label">أخبار عاجلة:</div>
-        <div class="ticker-content" id="breaking-news-ticker">
-            <span>جاري تحميل الأخبار العاجلة...</span>
-        </div>
-    </div>
-</div>
 </body>
 </html>
