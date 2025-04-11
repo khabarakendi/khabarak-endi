@@ -2,39 +2,35 @@ name: Update Yemeni News
 on:
   schedule:
     - cron: '*/5 * * * *'  # Runs every 5 minutes
-  workflow_dispatch:       # Allows manual triggers
-  push:
-    branches: [ main ]     # Run when code changes
+  workflow_dispatch:
 
 jobs:
   update-news:
     runs-on: ubuntu-latest
-    timeout-minutes: 5     # Prevent hanging
+    permissions:  # 👈 THIS FIXES THE 403 ERROR
+      contents: write  # Allows pushing changes
     
     steps:
-      # Step 1: Checkout code
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # Get full git history
-      
-      # Step 2: Set up Python
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}  # 👈 CRUCIAL FOR PUSHING
+
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
-      # Step 3: Install dependencies
-      - name: Install Python packages
+
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install feedparser beautifulsoup4 requests
-      
-      # Step 4: Run scraper
+
       - name: Scrape Yemeni news
         run: |
-          mkdir -p scripts
-          echo '
+          mkdir -p data scripts
+          python -c "
           import feedparser
           import json
           from datetime import datetime
@@ -42,49 +38,39 @@ jobs:
           import requests
 
           FEEDS = [
-              "https://www.almashhad-alyemeni.com/feed",
-              "https://yemennownews.com/feed",
-              "https://www.24-post.com/feed"
+              'https://www.almashhad-alyemeni.com/feed',
+              'https://yemennownews.com/feed',
+              'https://www.24-post.com/feed'
           ]
-
-          def get_feed(url):
-              try:
-                  headers = {"User-Agent": "Mozilla/5.0"}
-                  response = requests.get(url, headers=headers, timeout=10)
-                  return feedparser.parse(response.content)
-              except:
-                  return None
 
           articles = []
           for feed_url in FEEDS:
-              feed = get_feed(feed_url)
-              if feed and feed.entries:
+              try:
+                  headers = {'User-Agent': 'Mozilla/5.0'}
+                  response = requests.get(feed_url, headers=headers, timeout=10)
+                  feed = feedparser.parse(response.content)
                   for entry in feed.entries[:30]:
-                      try:
-                          articles.append({
-                              "title": BeautifulSoup(entry.title, "html.parser").get_text(),
-                              "url": entry.link,
-                              "source": feed_url.split("//")[1].split("/")[0],
-                              "date": datetime.utcnow().isoformat() + "Z"
-                          })
-                      except:
-                          continue
+                      articles.append({
+                          'title': BeautifulSoup(entry.title, 'html.parser').get_text(),
+                          'url': entry.link,
+                          'source': feed_url.split('//')[1].split('/')[0],
+                          'date': datetime.utcnow().isoformat() + 'Z'
+                      })
+              except Exception as e:
+                  print(f'Error with {feed_url}: {str(e)}')
 
-          with open("data/news.json", "w", encoding="utf-8") as f:
+          with open('data/news.json', 'w', encoding='utf-8') as f:
               json.dump({
-                  "lastUpdated": datetime.utcnow().isoformat() + "Z",
-                  "articles": articles[:150]
+                  'lastUpdated': datetime.utcnow().isoformat() + 'Z',
+                  'articles': articles[:150]
               }, f, ensure_ascii=False, indent=2)
-          ' > scripts/scrape_news.py
-          
-          python scripts/scrape_news.py
-      
-      # Step 5: Commit changes
-      - name: Commit and push
+          "
+
+      - name: Commit and push changes
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git pull --rebase
+          git pull
           git add data/news.json
-          git diff-index --quiet HEAD || git commit -m "Auto-update news [skip ci]"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update news [skip ci]"
           git push
