@@ -60,3 +60,51 @@ function formatDate(isoString) {
         day: 'numeric'
     });
 }
+function displayNews(articles) {
+    const container = document.getElementById('news-container');
+    if (!articles || articles.length === 0) {
+        container.innerHTML = '<div class="error"><p>لا توجد أخبار متاحة حاليًا</p></div>';
+        return;
+    }
+
+    let html = '<div class="news-grid">';
+    articles.forEach(article => {
+        const date = new Date(article.date);
+        const dateString = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+        const timeString = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        html += `
+            <div class="news-card">
+                <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
+                <div class="news-meta">
+                    <span class="source">${article.source}</span>
+                    <span class="datetime">${dateString} • ${timeString}</span>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+function updateLastUpdated(timestamp) {
+    const date = new Date(timestamp);
+    const options = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    };
+    document.getElementById('last-updated').textContent = `آخر تحديث: ${date.toLocaleDateString('en-US', options)}`;
+}
