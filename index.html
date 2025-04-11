@@ -50,6 +50,48 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Breaking News Ticker Styles */
+        .breaking-news-ticker {
+            background: #d00;
+            color: white;
+            padding: 10px 0;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .ticker-container {
+            display: flex;
+            align-items: center;
+        }
+        .ticker-label {
+            background: #900;
+            padding: 5px 15px;
+            margin-left: 15px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .ticker-content {
+            display: flex;
+            animation: ticker 30s linear infinite;
+            white-space: nowrap;
+        }
+        .ticker-item {
+            margin-left: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .ticker-item:after {
+            content: "•";
+            margin-right: 40px;
+        }
+        .ticker-item:last-child:after {
+            content: "";
+        }
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
     </style>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -58,6 +100,16 @@
     <a href="private.html" class="special-news-btn">
         أخبار خاصة
     </a>
+
+    <!-- Breaking News Ticker -->
+    <div class="breaking-news-ticker">
+        <div class="ticker-container">
+            <div class="ticker-label">أخبار عاجلة</div>
+            <div class="ticker-content" id="breakingNewsTicker">
+                <!-- Ticker items will be added by JavaScript -->
+            </div>
+        </div>
+    </div>
 
     <!-- Header Section -->
     <header id="site-header">
@@ -117,16 +169,6 @@
             <p>آخر تحديث: <span id="last-updated">جاري التحميل...</span></p>
         </div>
     </footer>
-
-    <!-- Breaking News Bar (Now Working with 3 News Items) -->
-    <div class="breaking-news-bar">
-        <div class="ticker-wrapper">
-            <div class="breaking-news-label">أخبار عاجلة:</div>
-            <div class="ticker-content" id="breaking-news-ticker">
-                <span>🚨 اجتماع هام بين الحكومة والمجلس الانتقالي في عدن (المصدر أونلاين) • 🚨 البنك المركزي يعلن إجراءات جديدة لتحسين الاقتصاد (يمن الآن) • 🚨 ارتفاع أسعار النفط عالمياً يؤثر على السوق المحلي (الاقتصادي اليمني) • </span>
-            </div>
-        </div>
-    </div>
 
     <!-- JavaScript -->
     <script src="js/utils.js"></script>
@@ -212,7 +254,7 @@
                         {
                             title: "تحديث الأخبار يواجه صعوبات تقنية",
                             url: "#",
-                            source: "فريق الدعم الفني",
+                            source: { name: "فريق الدعم الفني" },
                             date: new Date().toISOString(),
                             description: "نحن نعمل على حل المشكلة، يرجى المحاولة لاحقاً"
                         }
@@ -220,13 +262,39 @@
                 };
                 document.getElementById('news-container').innerHTML = fallbackNews.articles.map(article => `
                     <div class="news-item">
-                        <h3>${article.title}</h3>
-                        <div class="news-source">${article.source}</div>
+                        <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
+                        <div class="news-source">${article.source.name}</div>
                         <div class="news-excerpt">${article.description}</div>
                     </div>
                 `).join('');
+                
+                // Also update breaking news ticker with fallback content
+                updateBreakingNewsTicker([
+                    { title: "تحديث الأخبار يواجه صعوبات تقنية", source: { name: "فريق الدعم" } },
+                    { title: "نعمل على حل المشكلة التقنية", source: { name: "فريق الدعم" } },
+                    { title: "الرجاء المحاولة لاحقاً", source: { name: "فريق الدعم" } }
+                ]);
             }
         }, 8000);
+        
+        // Function to update breaking news ticker
+        function updateBreakingNewsTicker(articles) {
+            const ticker = document.getElementById('breakingNewsTicker');
+            if (!ticker) return;
+            
+            // Take last 3 articles
+            const breakingNews = articles.slice(0, 3);
+            
+            ticker.innerHTML = breakingNews.map(article => `
+                <div class="ticker-item">
+                    <span>${article.title}</span>
+                    <small>(${article.source.name})</small>
+                </div>
+            `).join('');
+        }
+        
+        // Sample usage (replace with your actual data loading):
+        // updateBreakingNewsTicker(latestNewsArticles);
     </script>
 </body>
 </html>
