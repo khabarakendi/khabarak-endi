@@ -41,7 +41,7 @@ header {
 
 /* Horizontal Navigation (Red Background) */
 nav {
-    background: #d00 !important; /* Changed from black to red */
+    background: #d00 !important;
     padding: 0 !important;
     height: 50px;
     display: flex;
@@ -110,7 +110,7 @@ nav a.active {
     100% { transform: rotate(360deg); }
 }
 
-/* News Items - Simplified Version */
+/* News Items - Enhanced Version */
 .news-item {
     background: white;
     margin-bottom: 15px;
@@ -130,10 +130,18 @@ nav a.active {
     color: #222;
 }
 
+.news-source {
+    color: #d00;
+    font-size: 0.9rem;
+    margin: 5px 0;
+    font-weight: bold;
+}
+
 .news-excerpt {
     color: #555;
     font-size: 0.9rem;
     margin-bottom: 8px;
+    line-height: 1.5;
 }
 
 .news-meta {
@@ -141,6 +149,13 @@ nav a.active {
     font-size: 0.8rem;
     border-top: 1px dashed #eee;
     padding-top: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.view-count {
+    color: #666;
+    font-size: 0.8rem;
 }
 
 /* BREAKING NEWS BAR - BOTTOM OF SCREEN */
@@ -202,6 +217,7 @@ nav a.active {
     z-index: 1000;
     transform-origin: left top;
     white-space: nowrap;
+    transition: background 0.3s;
 }
 
 .special-news-btn:hover {
@@ -239,4 +255,61 @@ nav a.active {
     margin-top: 10px;
     border-radius: 4px;
     cursor: pointer;
+    transition: background 0.3s;
+}
+
+.error button:hover {
+    background: #b00;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    gap: 5px;
+}
+
+.page-btn {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.3s;
+}
+
+.page-btn:hover {
+    background: #f0f0f0;
+}
+
+.page-btn.active {
+    background: #d00;
+    color: white;
+    border-color: #d00;
+}
+
+/* News Filters */
+.news-filters {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    margin: 10px 20px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+#news-search {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 300px;
+}
+
+#news-sort {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
