@@ -1,68 +1,52 @@
-// Cache DOM elements
-const newsContainer = document.getElementById('news-container');
-
-// Preload 5 Yemeni RSS feeds (for speed)
 const FAST_FEEDS = [
-    "https://www.almashhad-alyemeni.com/feed",
-    "https://almasdaronline.com/feed",
-    "https://yemennownews.com/feed",
-    "https://www.yemeneconomist.com/feed",
-    "https://www.24-post.com/feed"
+  "https://almasdaronline.com/feed",
+  "https://yemennownews.com/feed"
 ];
 
 async function fetchNews() {
-    // Show loading state
-    newsContainer.innerHTML = '<div class="loading">Loading latest updates...</div>';
+  const newsContainer = document.getElementById('news-container');
+  
+  try {
+    // Try CORS-anywhere proxy
+    const feed = FAST_FEEDS[0];
+    const proxyUrl = `https://cors-anywhere.herokuapp.com/${feed}`;
+    const response = await fetch(proxyUrl);
+    const text = await response.text();
     
-    try {
-        // Fetch from fastest feeds first
-        const promises = FAST_FEEDS.map(feed => 
-            fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}`)
-                .then(res => res.json())
-                .catch(e => null)
-        );
-
-        // Resolve all feeds in parallel
-        const results = await Promise.all(promises);
-        const validNews = results.filter(r => r?.items).flatMap(r => r.items);
-        
-        // Render immediately with first 150 items
-        renderNews(validNews.slice(0, 150));
-        
-        // Continue loading other feeds in background
-        loadRemainingFeeds();
-    } catch (error) {
-        console.error("Initial load failed:", error);
-        newsContainer.innerHTML = '<div class="error">Failed to load news. Retrying...</div>';
-        setTimeout(fetchNews, 5000);
-    }
+    // Parse RSS manually (simple version)
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+    const items = xml.querySelectorAll("item");
+    
+    const news = Array.from(items).map(item => ({
+      title: item.querySelector("title").textContent,
+      link: item.querySelector("link").textContent,
+      pubDate: item.querySelector("pubDate").textContent
+    }));
+    
+    renderNews(news.slice(0, 150));
+  } catch (error) {
+    console.error("Error:", error);
+    // Fallback to hardcoded news
+    renderNews([{
+      title: "اقرأ آخر الأخبار على المصدر مباشرة",
+      link: "https://almasdaronline.com",
+      pubDate: new Date().toISOString()
+    }]);
+  }
 }
 
 function renderNews(items) {
-    newsContainer.innerHTML = items.map(item => `
-        <div class="news-item" onclick="viewArticle('${encodeURIComponent(item.link)}')">
-            <h3>${item.title}</h3>
-            <div class="meta">
-                <span class="source">${getDomain(item.link)}</span>
-                <span class="time">${formatDate(item.pubDate)}</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Helper functions
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
-}
-
-function getDomain(url) {
-    return new URL(url).hostname.replace('www.', '');
+  const container = document.getElementById('news-container');
+  container.innerHTML = items.map(item => `
+    <div class="news-item" onclick="window.open('${item.link}', '_blank')">
+      <h3>${item.title}</h3>
+      <div class="meta">
+        <span class="source">${new URL(item.link).hostname}</span>
+        <span class="time">${new Date(item.pubDate).toLocaleString('en-US')}</span>
+      </div>
+    </div>
+  `).join('');
 }
 
 // Initialize
