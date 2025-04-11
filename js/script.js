@@ -1,39 +1,50 @@
-// Load news from JSON
+// Configuration
+const NEWS_DATA_URL = 'data/news.json';
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+// DOM Elements
+const newsContainer = document.getElementById('news-container');
+const datetimeElement = document.getElementById('datetime');
+
+// Load and display news
 async function loadNews() {
     try {
-        // Add cache-buster to prevent stale content
-        const response = await fetch(`data/news.json?t=${new Date().getTime()}`);
-        if (!response.ok) throw new Error("Failed to load news");
+        const response = await fetch(`${NEWS_DATA_URL}?t=${Date.now()}`);
+        if (!response.ok) throw new Error("Failed to fetch news");
         
         const data = await response.json();
-        renderNews(data.articles);
+        displayNews(data.articles);
     } catch (error) {
-        console.error("Error:", error);
-        document.getElementById('news-container').innerHTML = `
+        console.error("Error loading news:", error);
+        newsContainer.innerHTML = `
             <div class="error">
-                <p>News will update shortly. Last checked: ${new Date().toLocaleString()}</p>
+                <p>Failed to load news. Retrying...</p>
+                <p>Last checked: ${formatDate(new Date())}</p>
             </div>
         `;
     }
 }
 
-// Render news to DOM
-function renderNews(articles) {
-    const container = document.getElementById('news-container');
-    container.innerHTML = articles.map(article => `
+// Display news articles
+function displayNews(articles) {
+    if (!articles || articles.length === 0) {
+        newsContainer.innerHTML = '<div class="error">No news available at this time</div>';
+        return;
+    }
+
+    newsContainer.innerHTML = articles.map(article => `
         <div class="news-item" onclick="viewArticle('${encodeURIComponent(article.url)}')">
             <h3>${article.title}</h3>
             <div class="meta">
                 <span class="source">${article.source}</span>
-                <span class="time">${formatDate(article.date)}</span>
+                <span class="time">${formatDate(new Date(article.date))}</span>
             </div>
         </div>
     `).join('');
 }
 
 // Format date in English
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
+function formatDate(date) {
     return date.toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -42,28 +53,23 @@ function formatDate(dateStr) {
     });
 }
 
+// Update current time
+function updateDateTime() {
+    datetimeElement.textContent = formatDate(new Date());
+}
+
 // View article in embedded mode
 function viewArticle(url) {
-    localStorage.setItem('currentArticle', url);
+    sessionStorage.setItem('currentArticle', url);
     window.location.href = 'article.html';
 }
 
-// Update time every minute
-function updateDateTime() {
-    document.getElementById('datetime').textContent = 
-        new Date().toLocaleString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-}
-
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+function init() {
     loadNews();
     updateDateTime();
-    setInterval(updateDateTime, 60000);
-    setInterval(loadNews, 300000); // Refresh news every 5 mins
-});
+    setInterval(updateDateTime, 60000); // Update time every minute
+    setInterval(loadNews, REFRESH_INTERVAL); // Refresh news
+}
+
+document.addEventListener('DOMContentLoaded', init);
