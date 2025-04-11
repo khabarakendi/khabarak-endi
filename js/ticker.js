@@ -60,3 +60,36 @@ function showTickerError(message) {
         tickerElement.innerHTML = `<span class="ticker-error">${message}</span>`;
     }
 }
+async function startTicker() {
+    try {
+        if (animationId) cancelAnimationFrame(animationId);
+        
+        const response = await fetch('data/news.json');
+        if (!response.ok) throw new Error('Failed to load news data');
+        
+        const data = await response.json();
+        
+        tickerItems = data.articles
+            .slice(0, 10)
+            .map(item => {
+                const date = new Date(item.date);
+                const timeString = date.toLocaleTimeString('en-US', {
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true
+                });
+                return `${item.title} (${timeString})`;
+            })
+            .filter(item => item && item.trim().length > 0);
+        
+        if (tickerItems.length > 0) {
+            setupScrollingTicker();
+            startScrolling();
+        } else {
+            showTickerError('لا توجد أخبار عاجلة');
+        }
+    } catch (error) {
+        console.error('Ticker error:', error);
+        showTickerError('خطأ في تحميل الأخبار العاجلة');
+    }
+}
