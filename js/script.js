@@ -1,79 +1,69 @@
-// Yemeni RSS Feed Sources (your list)
-const RSS_FEEDS = [
-    "https://yemennownews.com/feed",
-    "https://www.24-post.com/feed",
-    "https://www.anbaaden.com/feed",
-    "https://huna-aden.com/feed",
-    "https://taiztoday.net/feed",
-    "https://www.lahjnews.net/feed",
+// Cache DOM elements
+const newsContainer = document.getElementById('news-container');
+
+// Preload 5 Yemeni RSS feeds (for speed)
+const FAST_FEEDS = [
+    "https://www.almashhad-alyemeni.com/feed",
     "https://almasdaronline.com/feed",
-    "https://www.marebpress.net/feed",
+    "https://yemennownews.com/feed",
     "https://www.yemeneconomist.com/feed",
-    "https://yemen-press.net/feed",
-    "https://alsahwa-yemen.net/feed",
-    "https://www.aljazeera.net/feed",
-    "https://www.france24.com/ar/",
-    "https://sahaafa.net/",
-    "https://sa24.co/",
-    "https://www.awraqpress.net/portal/",
-    "https://almethaq.net/news/",
-    "https://www.adngad.net/",
-    "https://crater-news.net/",
-    "https://crater-sky.net/",
-    "https://www.alhurra.com/",
-    "https://aawsat.com/feed",
-    "https://apnews.com/feed",
-    "https://x.com/financialjuice",
-    "https://belqees.net/",
-    "https://alsjl-news.com/",
-    "https://www.khabaragency.net/",
-    "https://ym-now.net/",
-    "https://arabic.rt.com/focuses/62314-%D8%A7%D9%84%D9%8A%D9%85%D9%86/",
+    "https://www.24-post.com/feed"
 ];
 
-// Convert RSS to JSON using free proxy (rss2json.com)
 async function fetchNews() {
-    const newsContainer = document.getElementById('news-container');
-    newsContainer.innerHTML = '<p>جاري تحميل الأخبار...</p>';
-
+    // Show loading state
+    newsContainer.innerHTML = '<div class="loading">Loading latest updates...</div>';
+    
     try {
-        let allNews = [];
-        
-        // Fetch from each RSS feed
-        for (const feedUrl of RSS_FEEDS) {
-            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            
-            if (data.items) {
-                allNews = [...allNews, ...data.items.map(item => ({
-                    title: item.title,
-                    source: item.link,
-                    time: new Date(item.pubDate).toLocaleString('ar-YE'),
-                    reads: "جديد"
-                }))];
-            }
-        }
+        // Fetch from fastest feeds first
+        const promises = FAST_FEEDS.map(feed => 
+            fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}`)
+                .then(res => res.json())
+                .catch(e => null)
+        );
 
-        // Display first 150 news items
-        renderNews(allNews.slice(0, 150));
+        // Resolve all feeds in parallel
+        const results = await Promise.all(promises);
+        const validNews = results.filter(r => r?.items).flatMap(r => r.items);
+        
+        // Render immediately with first 150 items
+        renderNews(validNews.slice(0, 150));
+        
+        // Continue loading other feeds in background
+        loadRemainingFeeds();
     } catch (error) {
-        console.error("Error:", error);
-        newsContainer.innerHTML = '<p>عذراً، حدث خطأ أثناء تحميل الأخبار.</p>';
+        console.error("Initial load failed:", error);
+        newsContainer.innerHTML = '<div class="error">Failed to load news. Retrying...</div>';
+        setTimeout(fetchNews, 5000);
     }
 }
 
-function renderNews(news) {
-    const container = document.getElementById('news-container');
-    container.innerHTML = news.map(item => `
-        <div class="news-item">
-            <h3><a href="${item.source}" target="_blank">${item.title}</a></h3>
-            <p class="meta">${item.time} | 👁️ ${item.reads}</p>
-            <button class="read-more" onclick="window.open('${item.source}', '_blank')">اقرأ المزيد</button>
+function renderNews(items) {
+    newsContainer.innerHTML = items.map(item => `
+        <div class="news-item" onclick="viewArticle('${encodeURIComponent(item.link)}')">
+            <h3>${item.title}</h3>
+            <div class="meta">
+                <span class="source">${getDomain(item.link)}</span>
+                <span class="time">${formatDate(item.pubDate)}</span>
+            </div>
         </div>
     `).join('');
 }
 
-// Initialize and refresh every 10 minutes
+// Helper functions
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function getDomain(url) {
+    return new URL(url).hostname.replace('www.', '');
+}
+
+// Initialize
 document.addEventListener('DOMContentLoaded', fetchNews);
-setInterval(fetchNews, 600000);
