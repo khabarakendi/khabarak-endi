@@ -7,7 +7,7 @@ on:
     branches: [ main ]     # Run when code changes
 
 permissions:
-  contents: write  # This is crucial for pushing changes
+  contents: write  # Necessary for pushing changes
 
 jobs:
   update-news:
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0   # Get full git history
-          token: ${{ secrets.GITHUB_TOKEN }}  # This provides write permissions
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       # Step 2: Set up Python
       - name: Set up Python 3.10
@@ -89,11 +89,19 @@ jobs:
           python scrape_news.py
       
       # Step 6: Commit and push with proper authentication
-      - name: Commit and push
+      - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git pull --rebase
+          git pull --rebase origin main
           git add data/news.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update news [skip ci]"
-          git push
+          
+          # Only commit if there are changes
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update news [skip ci]"
+            git push origin HEAD:main
+          fi
