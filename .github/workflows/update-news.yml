@@ -11,26 +11,35 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Important for git operations later
+        fetch-depth: 0  # Get complete git history
 
     - name: Set up Python 3.10
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
     - name: Install Python packages
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Scrape Yemeni news
-      run: python scrape_news.py  # Replace with your actual script name
+      run: python scrape_news.py  # Make sure this script exists
 
     - name: Commit and push changes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add .
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Automated news update [skip ci]" && git push)
+        # Only commit if there are changes
+        if [ -n "$(git status --porcelain)" ]; then
+          git commit -m "Automated news update [skip ci]"
+          git pull --rebase  # Handle any remote changes
+          git push
+        else
+          echo "No changes to commit"
+        fi
