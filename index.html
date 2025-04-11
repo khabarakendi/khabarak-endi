@@ -162,5 +162,62 @@
                 `<i class="icon-clock"></i> ${now.toLocaleDateString('ar-EG', options)}`;
         }
     </script>
+    <!-- JavaScript -->
+<script src="js/utils.js"></script>
+<script src="js/news-loader.js"></script>
+<script src="js/ticker.js"></script>
+
+<!-- Initialize Page -->
+<script>
+    // Keep your existing updateDateTime function
+    function updateDateTime() {
+        const now = new Date();
+        const options = {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        };
+        document.getElementById('current-datetime').innerHTML = 
+            `<i class="icon-clock"></i> ${now.toLocaleDateString('ar-EG', options)}`;
+    }
+
+    // Add the new initialization code
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set initial datetime
+        updateDateTime();
+        
+        // Load news immediately
+        if (typeof loadNews === 'function') {
+            loadNews();
+        }
+        
+        // Start breaking news ticker with retry mechanism
+        startTickerWithRetry();
+        
+        // Update time every minute
+        setInterval(updateDateTime, 60000);
+    });
+
+    function startTickerWithRetry(retryCount = 0) {
+        if (typeof startTicker === 'function') {
+            startTicker().catch(error => {
+                console.error('Ticker failed:', error);
+                if (retryCount < 3) {
+                    setTimeout(() => startTickerWithRetry(retryCount + 1), 5000);
+                }
+            });
+        } else {
+            console.error('startTicker function not found');
+            // Try again after 1 second if the script might not be loaded yet
+            if (retryCount < 5) {
+                setTimeout(() => startTickerWithRetry(retryCount + 1), 1000);
+            }
+        }
+    }
+</script>
 </body>
 </html>
