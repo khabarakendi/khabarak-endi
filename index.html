@@ -4,33 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>خبرك عندي - Yemen News</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Additional inline styles for critical elements */
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+        .error {
+            background: #ffecec;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 20px;
+            color: #d00;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div class="header-top">
-            <div class="logo">
-                <span class="red">خبرك</span>
-                <span class="green">عندي</span>
+    <!-- Header Section -->
+    <header class="site-header">
+        <div class="header-container">
+            <!-- Logo (Top-Right) -->
+            <div class="logo-container">
+                <div class="logo">
+                    <span class="red">خبرك</span>
+                    <span class="green">عندي</span>
+                </div>
+                <div class="header-controls">
+                    <div class="current-datetime">
+                        <i class="fas fa-clock"></i>
+                        <span id="current-datetime">Loading...</span>
+                    </div>
+                    <a href="admin.html" class="admin-button">
+                        <i class="fas fa-plus-circle"></i> Add News
+                    </a>
+                </div>
             </div>
-            <div class="header-actions">
-                <a href="admin.html" class="admin-btn">Add News</a>
-                <div class="datetime" id="datetime"></div>
+
+            <!-- Categories Navigation -->
+            <nav class="categories-nav">
+                <ul>
+                    <li><a href="#" class="active" data-category="all"><i class="fas fa-home"></i> الرئيسية</a></li>
+                    <li><a href="#" data-category="local"><i class="fas fa-map-marker-alt"></i> محلية</a></li>
+                    <li><a href="#" data-category="international"><i class="fas fa-globe"></i> دولية</a></li>
+                    <li><a href="#" data-category="sports"><i class="fas fa-running"></i> رياضة</a></li>
+                    <li><a href="#" data-category="economic"><i class="fas fa-chart-line"></i> اقتصادية</a></li>
+                    <li><a href="private.html" data-category="private"><i class="fas fa-lock"></i> خاصة</a></li>
+                </ul>
+            </nav>
+
+            <!-- Breaking News Ticker (Red) -->
+            <div class="breaking-news-ticker">
+                <div class="ticker-label">
+                    <span>أخبار عاجلة:</span>
+                </div>
+                <div class="ticker-content" id="breaking-news-ticker">
+                    <span>Loading breaking news...</span>
+                </div>
             </div>
-        </div>
-        
-        <div class="ticker">
-            <div id="ticker-content">Loading breaking news...</div>
         </div>
     </header>
 
-    <main>
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- News Filters -->
+        <div class="news-filters">
+            <div class="filter-group">
+                <label for="sort-by">Sort by:</label>
+                <select id="sort-by">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="search-news">Search:</label>
+                <input type="text" id="search-news" placeholder="Search news...">
+            </div>
+        </div>
+
+        <!-- News Container -->
         <div class="news-container" id="news-container">
-            <div class="loading">Loading news...</div>
+            <div class="loading">
+                <div class="spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Loading news updates...</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+            <button class="prev-page" disabled><i class="fas fa-chevron-right"></i> Previous</button>
+            <div class="page-numbers" id="page-numbers"></div>
+            <button class="next-page">Next <i class="fas fa-chevron-left"></i></button>
         </div>
     </main>
 
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>About Khabarak Endi</h3>
+                <p>Your trusted source for the latest Yemeni news, updated every 5 minutes.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="admin.html">Add News</a></li>
+                    <li><a href="private.html">Private News</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p>Email: info@khabarak-endi.com</p>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2023 Khabarak Endi. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
     <script src="js/ticker.js"></script>
-    <script src="js/script.js"></script>
+    <script src="js/news-loader.js"></script>
+    <script src="js/utils.js"></script>
+    
+    <!-- Initialize the page -->
+    <script>
+        // Set current datetime immediately
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('current-datetime').textContent = 
+                now.toLocaleDateString('en-US', options);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 60000); // Update every minute
+            
+            // Load news immediately
+            if (typeof loadNews === 'function') {
+                loadNews();
+            }
+            
+            // Initialize ticker
+            if (typeof initTicker === 'function') {
+                initTicker();
+            }
+        });
+    </script>
 </body>
 </html>
