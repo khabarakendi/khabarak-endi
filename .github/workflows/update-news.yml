@@ -1,0 +1,28 @@
+name: Update Yemeni News
+on:
+  schedule:
+    - cron: '0 12 * * *'  # Runs daily at 12 PM UTC
+  workflow_dispatch:       # Allows manual triggers
+
+jobs:
+  fetch-news:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Fetch RSS Feeds
+        run: |
+          # Install Python and dependencies
+          sudo apt-get install python3-pip
+          pip3 install feedparser datetime
+          
+          # Run RSS scraper
+          python3 fetch_news.py
+          
+      - name: Commit Changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add data/news.json
+          git commit -m "Auto-update news"
+          git push
