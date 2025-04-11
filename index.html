@@ -203,6 +203,30 @@
             
             items.forEach(item => container.appendChild(item));
         });
+
+        // Emergency fallback - will show after 8 seconds if main loader fails
+        setTimeout(() => {
+            if (document.querySelector('.loading')) {
+                const fallbackNews = {
+                    articles: [
+                        {
+                            title: "تحديث الأخبار يواجه صعوبات تقنية",
+                            url: "#",
+                            source: "فريق الدعم الفني",
+                            date: new Date().toISOString(),
+                            description: "نحن نعمل على حل المشكلة، يرجى المحاولة لاحقاً"
+                        }
+                    ]
+                };
+                document.getElementById('news-container').innerHTML = fallbackNews.articles.map(article => `
+                    <div class="news-item">
+                        <h3>${article.title}</h3>
+                        <div class="news-source">${article.source}</div>
+                        <div class="news-excerpt">${article.description}</div>
+                    </div>
+                `).join('');
+            }
+        }, 8000);
     </script>
 </body>
 </html>
