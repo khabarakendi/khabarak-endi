@@ -3,35 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خبرك عندي</title>
+    <title>خبرك عندي - Yemen News</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <!-- Header -->
     <header>
-        <div class="logo">
-            <span class="red">خبرك</span>
-            <span class="green">عندي</span>
+        <div class="header-top">
+            <div class="logo">
+                <span class="red">خبرك</span>
+                <span class="green">عندي</span>
+            </div>
+            <div class="header-actions">
+                <a href="admin.html" class="admin-btn">Add News</a>
+                <div class="datetime" id="datetime"></div>
+            </div>
         </div>
-        <div class="ticker" id="ticker">
-            <span id="ticker-content">🚨 تحميل آخر الأخبار...</span>
+        
+        <!-- Red Breaking News Ticker -->
+        <div class="ticker">
+            <div id="ticker-content">Loading breaking news...</div>
         </div>
     </header>
 
-    <!-- Navigation -->
-    <nav>
-        <a href="#" class="active">الرئيسية</a>
-        <a href="#local">محلية</a>
-        <a href="#international">دولية</a>
-        <a href="#sports">رياضة</a>
-        <a href="#economic">اقتصادية</a>
-        <a href="private.html">خاصة</a>
-    </nav>
-
     <!-- News Container -->
-    <div class="news-container" id="news-container">
-        <!-- Filled by JavaScript -->
-    </div>
+    <main>
+        <div class="news-container" id="news-container">
+            <div class="loading">Loading news...</div>
+        </div>
+    </main>
 
     <script src="js/ticker.js"></script>
     <script src="js/script.js"></script>
