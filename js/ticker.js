@@ -1,4 +1,3 @@
-// Enhanced breaking news ticker with error handling and smooth animation
 let tickerItems = [];
 let currentTickerIndex = 0;
 let tickerInterval;
@@ -25,9 +24,39 @@ async function startTicker() {
         if (tickerItems.length > 0) {
             updateTicker();
             tickerInterval = setInterval(updateTicker, TICKER_SPEED);
+            return Promise.resolve(); // Indicate success
         } else {
             showTickerError('No breaking news available');
+            return Promise.reject('No news items available');
         }
     } catch (error) {
         console.error('Ticker error:', error);
         showTickerError('Failed to load breaking news');
+        return Promise.reject(error);
+    }
+}
+
+function updateTicker() {
+    const tickerElement = document.getElementById('breaking-news-ticker');
+    if (!tickerElement) return;
+    
+    // Fade out current content
+    tickerElement.style.opacity = 0;
+    
+    setTimeout(() => {
+        // Update content
+        tickerElement.textContent = tickerItems[currentTickerIndex];
+        // Fade in new content
+        tickerElement.style.opacity = 1;
+        
+        // Move to next item
+        currentTickerIndex = (currentTickerIndex + 1) % tickerItems.length;
+    }, 300); // Match this with CSS transition time
+}
+
+function showTickerError(message) {
+    const tickerElement = document.getElementById('breaking-news-ticker');
+    if (tickerElement) {
+        tickerElement.innerHTML = `<span class="ticker-error">${message}</span>`;
+    }
+}
